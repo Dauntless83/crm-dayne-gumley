@@ -717,19 +717,40 @@
     const { owner: REPO_OWNER, repo: REPO_NAME } = getRepoConfig();
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const savedToken = localStorage.getItem('github_token');
       if (savedToken) {
         GITHUB_TOKEN = savedToken;
-        showMainApp();
-        loadLeads();
-        loadNoteSnippets();
+        // Validate token before showing app
+        const valid = await validateToken();
+        if (valid) {
+          showMainApp();
+          loadLeads();
+          loadNoteSnippets();
+        } else {
+          // Token invalid — force re-login
+          localStorage.removeItem('github_token');
+          GITHUB_TOKEN = '';
+          document.getElementById('token-setup').classList.remove('hidden');
+          alert('Your GitHub token has expired or been revoked. Please enter your new token.');
+        }
       } else {
         // Show token entry form
         document.getElementById('token-setup').classList.remove('hidden');
       }
       setupNavigation();
     });
+
+    async function validateToken() {
+      try {
+        const response = await fetch('https://api.github.com/user', {
+          headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        return response.status === 200;
+      } catch (error) {
+        return false;
+      }
+    }
 
     function setupNavigation() {
       document.querySelectorAll('.nav-button').forEach(btn => {
@@ -801,6 +822,15 @@
             }
           }
         );
+
+        if (response.status === 401) {
+          // Token expired or revoked
+          localStorage.removeItem('github_token');
+          GITHUB_TOKEN = '';
+          alert('Your GitHub token has expired or been revoked. Please log in again.');
+          location.reload();
+          return;
+        }
 
         if (response.status === 404) {
           console.log('File not found, initializing...');
