@@ -1,1 +1,21 @@
-{"leads": [], "lastUpdated": ""}
+{
+  "leads": [
+    {
+      "id": 1,
+      "name": "Testy McTestFace",
+      "source": "Facebook",
+      "status": "New",
+      "notes": "",
+      "added": "2026-06-13"
+    },
+    {
+      "id": 2,
+      "name": "Jane Tester",
+      "source": "Facebook",
+      "status": "New",
+      "notes": "Interested in trading signals",
+      "added": "2026-06-14"
+    }
+  ],
+  "lastUpdated": "2026-06-14"
+}
