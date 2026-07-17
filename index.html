@@ -6,7 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>CRM - Lead Management</title>
+  <meta name="version" content="2.0">
+  <title>CRM - Lead Management v2</title>
   <style>
     * { box-sizing: border-box; }
     :root {
@@ -225,7 +226,7 @@
     <div class="container">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-          <h1 style="margin: 0;">Dayne Gumley - CRM Lead Management</h1>
+          <h1 style="margin: 0;">Michael Martin - CRM Lead Management</h1>
           <img src="assets/teamabundacebanner.png" alt="Team Abundance" style="height: 70px; width: auto; max-width: 300px; object-fit: contain;">
         </div>
         <a href="https://imabundance.com/" target="_blank" class="button button-secondary" style="text-decoration: none; font-size: 14px;">📊 Team Dashboard</a>
@@ -819,6 +820,7 @@
           sha = '';
           await initializeRepo();
         } else if (response.ok) {
+          saveInProgress = false;
           const data = await response.json();
           const content = JSON.parse(atob(data.content));
           leads = content.leads || [];
@@ -884,6 +886,7 @@
           noteSnippets = [];
           snippetsSha = '';
         } else if (response.ok) {
+          saveInProgress = false;
           const data = await response.json();
           const content = JSON.parse(atob(data.content));
           noteSnippets = content.snippets || [];
@@ -917,6 +920,7 @@
         );
 
         if (response.ok) {
+          saveInProgress = false;
           const data = await response.json();
           snippetsSha = data.content.sha;
           return true;
@@ -1006,7 +1010,6 @@
     // Rate limiting protection
     let lastSaveTime = 0;
     let saveInProgress = false;
-
     async function saveLeadsToGitHub() {
       // Prevent concurrent saves
       if (saveInProgress) {
@@ -1043,9 +1046,9 @@
         );
 
         if (response.ok) {
+          saveInProgress = false;
           const data = await response.json();
           sha = data.content.sha;
-          saveInProgress = false;
           return true;
         }
         console.error('Save failed:', await response.text());
@@ -1181,7 +1184,14 @@
     function renderLeadsTable() {
       let filtered = getFilteredLeads();
       
-      if (sortMode === 'followup') {
+      if (currentView === 'followups') {
+        // Follow-ups tab: sort by lastContact ascending (oldest first), nulls last
+        filtered.sort((a, b) => {
+          const aDate = a.lastContact ? new Date(a.lastContact).getTime() : Infinity;
+          const bDate = b.lastContact ? new Date(b.lastContact).getTime() : Infinity;
+          return aDate - bDate;
+        });
+      } else if (sortMode === 'followup') {
         // Sort by nextFollowUp ascending (soonest first), nulls last
         filtered.sort((a, b) => {
           const aDate = a.nextFollowUp ? new Date(a.nextFollowUp).getTime() : Infinity;
